@@ -37,7 +37,7 @@ RUN git clone https://github.com/ambrop72/badvpn.git && \
 WORKDIR /
 RUN useradd -m -s /bin/bash buhonero && echo 'buhonero:gpc-test' | chpasswd && \
     useradd -m -s /bin/bash GFRONTELBUHONERO && echo 'GFRONTELBUHONERO:TG-ElIBuhonero' | chpasswd && \
-    useradd -m -s /bin/bash usuario_nuevo1 && echo 'usuario_nuevo1:contraseña1' | chpasswd && \
+    useradd -m -s /bin/bash GRUPOBUHO && echo 'GRUPOBUHO:TG-ELBUHONERO' | chpasswd && \
     useradd -m -s /bin/bash usuario_nuevo2 && echo 'usuario_nuevo2:contraseña2' | chpasswd && \
     useradd -m -s /bin/bash usuario_nuevo3 && echo 'usuario_nuevo3:contraseña3' | chpasswd && \
     useradd -m -s /bin/bash usuario_nuevo4 && echo 'usuario_nuevo4:contraseña4' | chpasswd && \
