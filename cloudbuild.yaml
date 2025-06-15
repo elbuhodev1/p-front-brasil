@@ -1,6 +1,6 @@
 steps:
 - name: 'gcr.io/cloud-builders/docker'
-  args: ['build', '-t', 'southamerica-east1-docker.pkg.dev/$PROJECT_ID/gpc-ws/ws:latest', '.']
+  args: ['build', '-t', 'southamerica-east1-docker.pkg.dev/$PROJECT_ID/p-front-brasil/ws:latest', '.']
 images:
 - 'us-central1-docker.pkg.dev/$PROJECT_ID/gpc-ws/ws:latest'
 options:
