@@ -1,58 +1,42 @@
-FROM golang:1.24-alpine AS builder
-WORKDIR /app
-COPY go.mod go.sum ./
-RUN go mod download
-COPY . .
-RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o /app/app .
-FROM debian:12-slim
-ENV DEBIAN_FRONTEND=noninteractive
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
-    dropbear-run \
-    tmux \
-    net-tools \
-    git \
-    cmake \
-    build-essential \
-    ca-certificates \
-    && apt-get clean && \
-    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
-WORKDIR /tmp
-RUN git clone https://github.com/ambrop72/badvpn.git && \
-    cd badvpn && \
-    mkdir build && \
-    cd build && \
-    cmake .. -DBUILD_NOTHING_BY_DEFAULT=1 -DBUILD_UDPGW=1 && \
-    make install && \
-    cd / && \
-    rm -rf /tmp/badvpn
-WORKDIR /
-RUN useradd -m -s /bin/bash buhonero && \
-    echo 'buhonero:gpc-test' | chpasswd && \
-    useradd -m -s /bin/bash GFRONTELBUHONERO && \
-    echo 'GFRONTELBUHONERO:TG-ElIBuhonero' | chpasswd && \
-    useradd -m -s /bin/bash usuario_nuevo1 && \
-    echo 'usuario_nuevo1:contraseña1' | chpasswd && \
-    useradd -m -s /bin/bash usuario_nuevo2 && \
-    echo 'usuario_nuevo2:contraseña2' | chpasswd && \
-    useradd -m -s /bin/bash usuario_nuevo3 && \
-    echo 'usuario_nuevo3:contraseña3' | chpasswd && \
-    useradd -m -s /bin/bash usuario_nuevo4 && \
-    echo 'usuario_nuevo4:contraseña4' | chpasswd && \
-    useradd -m -s /bin/bash usuario_nuevo5 && \
-    echo 'usuario_nuevo5:contraseña5' | chpasswd && \
-    useradd -m -s /bin/bash usuario_nuevo6 && \
-    echo 'usuario_nuevo6:contraseña6' | chpasswd && \
-    useradd -m -s /bin/bash usuario_nuevo7 && \
-    echo 'usuario_nuevo7:contraseña7' | chpasswd && \
-    useradd -m -s /bin/bash usuario_nuevo8 && \
-    echo 'usuario_nuevo8:contraseña8' | chpasswd && \
-    useradd -m -s /bin/bash usuario_nuevo9 && \
-    echo 'usuario_nuevo9:contraseña9' | chpasswd && \
-    useradd -m -s /bin/bash usuario_nuevo10 &&
-RUN mkdir -p /etc/dropbear
-COPY --from=builder /app/app /usr/local/bin/proxy
-COPY entrypoint.sh /usr/local/bin/entrypoint.sh
-RUN chmod +x /usr/local/bin/proxy /usr/local/bin/entrypoint.sh
-EXPOSE 8080
-ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
+#!/bin/bash
+echo "=== Iniciando Proxy SSH para Cloud Run ==="
+
+export DHOST=${DHOST:-"127.0.0.1"}
+export DPORT=${DPORT:-"40000"}
+export PORT=${PORT:-"8080"}
+export PACKSKIP=${PACKSKIP:-"1"}
+export UDPGW_PORT=${UDPGW_PORT:-"7300"}
+echo "[INFO] Verificando claves SSH de Dropbear..."
+if [ ! -f /etc/dropbear/dropbear_rsa_host_key ]; then
+    echo "[INFO] Generando clave RSA para Dropbear..."
+    dropbearkey -t rsa -f /etc/dropbear/dropbear_rsa_host_key
+fi
+if [ ! -f /etc/dropbear/dropbear_ecdsa_host_key ]; then
+    echo "[INFO] Generando clave ECDSA para Dropbear..."
+    dropbearkey -t ecdsa -f /etc/dropbear/dropbear_ecdsa_host_key
+fi
+echo "[INFO] Iniciando Dropbear SSH en puerto $DPORT..."
+tmux new-session -d -s ssh_session "dropbear -REF -p $DPORT -W 65535"
+echo "[INFO] Iniciando Badvpn UDPgw en puerto $UDPGW_PORT..."
+tmux new-session -d -s udpgw_session "/usr/local/bin/badvpn-udpgw --listen-addr 127.0.0.1:$UDPGW_PORT --max-clients 1000 --max-connections-for-client 10"
+sleep 3
+if ! netstat -tuln | grep -q ":$DPORT "; then
+    echo "[ERROR] Dropbear no se inició correctamente en puerto $DPORT"
+    echo "[INFO] Intentando iniciar Dropbear directamente..."
+    dropbear -REF -p $DPORT -W 65535 &
+    sleep 2
+fi
+if netstat -tuln | grep -q ":$DPORT "; then
+    echo "[INFO] Dropbear SSH corriendo en puerto $DPORT"
+else
+    echo "[ERROR] No se pudo iniciar Dropbear SSH"
+    exit 1
+fi
+echo "[INFO] Configuración:"
+echo "  - Proxy puerto: $PORT"
+echo "  - SSH puerto: $DPORT"
+echo "  - UDPgw puerto: $UDPGW_PORT" # <- Línea de log añadida
+echo "  - Host destino: $DHOST"
+echo "  - Paquetes a saltar: $PACKSKIP"
+echo "[INFO] Iniciando proxy en primer plano..."
+exec /usr/local/bin/proxy
