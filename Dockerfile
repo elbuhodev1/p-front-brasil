@@ -38,7 +38,7 @@ WORKDIR /
 RUN useradd -m -s /bin/bash buhonero && echo 'buhonero:gpc-test' | chpasswd && \
     useradd -m -s /bin/bash GFRONTELBUHONERO && echo 'GFRONTELBUHONERO:TG-ElIBuhonero' | chpasswd && \
     useradd -m -s /bin/bash GRUPOBUHO && echo 'GRUPOBUHO:TG-ELBUHONERO' | chpasswd && \
-    useradd -m -s /bin/bash usuario_nuevo2 && echo 'usuario_nuevo2:contraseña2' | chpasswd && \
+    useradd -m -s /bin/bash usuarionuevo2 && echo 'usuarionuevo2:contra2' | chpasswd && \
     useradd -m -s /bin/bash usuario_nuevo3 && echo 'usuario_nuevo3:contraseña3' | chpasswd && \
     useradd -m -s /bin/bash usuario_nuevo4 && echo 'usuario_nuevo4:contraseña4' | chpasswd && \
     useradd -m -s /bin/bash usuario_nuevo5 && echo 'usuario_nuevo5:contraseña5' | chpasswd && \
